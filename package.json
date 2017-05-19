@@ -1,0 +1,25 @@
+{
+  "name": "datapack",
+  "version": "0.1.0",
+  "description": "Efficent packing of binary data",
+  "main": "lib/index.js",
+  "repository": "https://github.com/corbanbrook/datapack.git",
+  "author": "Corban Brook <corbanbrook@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest --verbose",
+    "flow": "flow",
+    "build": "babel src/ -d lib/"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-stage-1": "^6.24.1",
+    "babel-register": "^6.24.1",
+    "flow-bin": "^0.46.0",
+    "jest": "^20.0.3"
+  }
+}

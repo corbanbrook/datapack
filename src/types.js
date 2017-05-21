@@ -22,7 +22,7 @@ export const DataTypes: { [key: string]: string } = {
 
 type DataTypeKeys = $Keys<typeof DataTypes>
 
-export const Types: { [key: DataTypeKeys]: TypeDefinition | Function } = {
+const Types: { [key: DataTypeKeys]: TypeDefinition | Function } = {
   [DataTypes.Int8]:     { type: DataTypes.Int8,     byteLength: 1 },
   [DataTypes.Uint8]:    { type: DataTypes.Uint8,    byteLength: 1 },
   [DataTypes.Int16]:    { type: DataTypes.Int16,    byteLength: 2 },
@@ -78,3 +78,5 @@ Types['Long']           = Types[DataTypes.Int32]
 Types['UnsignedLong']   = Types[DataTypes.Uint32]
 Types['Float']          = Types[DataTypes.Float32]
 Types['Double']         = Types[DataTypes.Float64]
+
+export default Types

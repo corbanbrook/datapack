@@ -1,20 +1,22 @@
 //@flow
 
 export default class Component {
-  offset: number = 0
   name: string
   def: Object
+  flag: number = 0
+  byteLength: number
 
   constructor(name: string, def: Object) {
     this.name = name
     this.def = def
+    this.byteLength = def.byteLength
   }
 
-  read(dataView: DataView, littleEndian: boolean = false) {
-    return this.def.read(dataView, this.offset, littleEndian)
+  read(dataView: DataView, offset: number, littleEndian: boolean = false) {
+    return this.def.read(dataView, offset, littleEndian)
   }
 
-  write(dataView: DataView, value: any, littleEndian: boolean = false) {
-    this.def.write(dataView, this.offset, value, littleEndian)
+  write(dataView: DataView, offset: number, value: any, littleEndian: boolean = false) {
+    this.def.write(dataView, offset, value, littleEndian)
   }
 }

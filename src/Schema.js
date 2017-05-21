@@ -1,6 +1,8 @@
 //@flow
 
 import Component from './Component'
+import Types from './Types'
+import { hasFlag } from './helpers'
 
 let idx = 0
 
@@ -9,33 +11,95 @@ export default class Schema {
   name: string
   components: Map<string, Component> = new Map()
   byteLength: number = 0
+  headerByteLength: number = 0
+
+  header: Map<string, Component> = new Map()
 
   constructor(name: string, components: Array<Component> = [], options: Object = {}) {
     this.id = ++idx
     this.name = name
-    components.forEach(component => {
-      const { name, def } = component
-      component.offset = this.byteLength
-      this.byteLength += def.byteLength
-      this.components.set(name, component)
+
+    this.header.set('type', new Component('type', Types.Uint16))
+    this.header.set('uid', new Component('uid', Types.Uint16))
+    this.header.set('bitmask', new Component('bitmask', Types.Uint16))
+    this.header.forEach(component => this.headerByteLength += component.byteLength)
+
+    this.byteLength = this.headerByteLength
+
+    components.forEach((component, componentIdx) => {
+      component.flag = 1 << componentIdx
+      this.byteLength += component.byteLength
+      this.components.set(component.name, component)
     }, 0)
   }
 
-  serialize(buffer: ArrayBuffer, props: Object): ArrayBuffer {
-    //const buffer = new ArrayBuffer(this.byteLength)
-    const dataView = new DataView(buffer, 0, buffer.byteLength)
-    this.components.forEach(component => {
-      component.write(dataView, props[component.name])
-    })
-
-    return buffer
+  getByteLength(components?: Array<Component>): number {
+    if (components && components.length) {
+      return components.reduce((acc, c) => {
+        acc += c.byteLength
+        return acc
+      }, this.headerByteLength)
+    } else {
+      return this.byteLength
+    }
   }
 
-  deserialize(dataView: DataView): Object {
-    const result = {}
-    this.components.forEach(component => {
-      result[component.name] = component.read(dataView)
+  getComponentsFromBitmask(bitmask: number): Array<Component> {
+    return Array.from(this.components.values()).filter(component =>
+      hasFlag(bitmask, component.flag)
+    )
+  }
+
+  getComponentsBitmask(components: Array<Component>): number {
+    let bitmask = 0
+
+    components.forEach(component => {
+      bitmask = bitmask | component.flag
     })
-    return result
+
+    return bitmask
+  }
+
+  serialize(dataView: DataView, offset: number, components: Array<Component>, props: Object): number {
+    const bitmask = this.getComponentsBitmask(components)
+    let byteLength = 0
+
+    const headerProps = {
+      type: this.id,
+      uid: props.uid,
+      bitmask
+    }
+
+    this.header.forEach((component, idx) => {
+      component.write(dataView, offset + byteLength, headerProps[component.name])
+      byteLength += component.byteLength
+    })
+
+    components.forEach(component => {
+      component.write(dataView, offset + byteLength, props[component.name])
+      byteLength += component.byteLength
+    })
+
+    return byteLength
+  }
+
+  deserialize(dataView: DataView, offset: number, callback: Function): number {
+    const result = {}
+    let byteLength = 0
+
+    this.header.forEach(component => {
+      result[component.name] = component.read(dataView, offset + byteLength)
+      byteLength += component.byteLength
+    })
+
+    const components = this.getComponentsFromBitmask(result.bitmask)
+    components.forEach(component => {
+      result[component.name] = component.read(dataView, offset + byteLength)
+      byteLength += component.byteLength
+    })
+
+    callback(result)
+
+    return byteLength
   }
 }

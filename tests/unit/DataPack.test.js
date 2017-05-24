@@ -19,7 +19,14 @@ const schema = new Schema(1, 'boid', [
   new Component('vel', Types.Array(Types.Float32, 2)),
   new Component('acc', Types.Array(Types.Float32, 2)),
   new Component('rot', Types.Float32),
-])
+], { diff: true })
+
+const schemaNoDiff = new Schema(1, 'boid', [
+  new Component('loc', Types.Array(Types.Float32, 2)),
+  new Component('vel', Types.Array(Types.Float32, 2)),
+  new Component('acc', Types.Array(Types.Float32, 2)),
+  new Component('rot', Types.Float32),
+], { diff: false })
 
 describe('DataPack:schemas', () => {
   const datapack = new DataPack()
@@ -86,5 +93,31 @@ describe('DataPack:createPacket', () => {
   test('a small packet', () => {
     const buffer = datapack.serialize(clientId, initialItems, maxPacketSize)
     expect(buffer.byteLength).toBe(schema.byteLength * 2)
+  })
+})
+
+describe('DataPack:readPacket', () => {
+  const datapack = new DataPack([schemaNoDiff])
+  const maxPacketSize = 1024
+
+  test('create a packet and read it back', () => {
+    const buffer = datapack.serialize(clientId, initialItems, maxPacketSize)
+    expect(buffer.byteLength).toBe(96)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(3)
+  })
+
+  test('create another packet and read it back', () => {
+    const buffer = datapack.serialize(clientId, updatedItems, maxPacketSize)
+    expect(buffer.byteLength).toBe(96)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(3)
+  })
+
+  test('create another packet and read it back again', () => {
+    const buffer = datapack.serialize(clientId, updatedItems, maxPacketSize)
+    expect(buffer.byteLength).toBe(96)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(3)
   })
 })

@@ -4,8 +4,6 @@ import Component from './Component'
 import Types from './Types'
 import { hasFlag } from './helpers'
 
-let idx = 0
-
 export default class Schema {
   id: number
   name: string
@@ -15,11 +13,11 @@ export default class Schema {
 
   header: Map<string, Component> = new Map()
 
-  constructor(name: string, components: Array<Component> = [], options: Object = {}) {
-    this.id = ++idx
+  constructor(id: number, name: string, components: Array<Component> = [], options: Object = {}) {
+    this.id = id
     this.name = name
 
-    this.header.set('type', new Component('type', Types.Uint16))
+    this.header.set('schemaId', new Component('schemaId', Types.Uint16))
     this.header.set('uid', new Component('uid', Types.Uint16))
     this.header.set('bitmask', new Component('bitmask', Types.Uint16))
     this.header.forEach(component => this.headerByteLength += component.byteLength)
@@ -65,7 +63,7 @@ export default class Schema {
     let byteLength = 0
 
     const headerProps = {
-      type: this.id,
+      schemaId: this.id,
       uid: props.uid,
       bitmask
     }

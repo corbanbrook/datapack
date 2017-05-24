@@ -1,7 +1,7 @@
 import { Schema, Component, Types } from '../../src'
 
 test('Create schema', () => {
-  const schema = new Schema('thing', [
+  const schema = new Schema(1, 'thing', [
     new Component('loc', Types.Array(Types.Float32, 2)),
     new Component('vel', Types.Array(Types.Float32, 2)),
     new Component('rot', Types.Float32),

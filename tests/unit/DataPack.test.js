@@ -3,38 +3,30 @@ import { DataPack, Schema, Component, Types } from '../../src'
 const clientId = 1
 
 const initialItems = [
-  { type: 'boid', uid: 1, loc: [10, 10], vel: [10, 10], acc: [10, 10], rot: 10 },
-  { type: 'boid', uid: 2, loc: [20, 20], vel: [20, 20], acc: [20, 20], rot: 20 },
-  { type: 'boid', uid: 3, loc: [30, 30], vel: [30, 30], acc: [30, 30], rot: 30 }
+  { schemaId: 1, uid: 1, loc: [10, 10], vel: [10, 10], acc: [10, 10], rot: 10 },
+  { schemaId: 1, uid: 2, loc: [20, 20], vel: [20, 20], acc: [20, 20], rot: 20 },
+  { schemaId: 1, uid: 3, loc: [30, 30], vel: [30, 30], acc: [30, 30], rot: 30 }
 ]
 
 const updatedItems = [
-  { type: 'boid', uid: 1, loc: [11, 11], vel: [11, 11], acc: [10, 10], rot: 10 }, // loc and vel changed
-  { type: 'boid', uid: 2, loc: [20, 20], vel: [20, 20], acc: [20, 20], rot: 21 }, // rot changed
-  { type: 'boid', uid: 3, loc: [30, 30], vel: [30, 30], acc: [30, 30], rot: 30 }  // no change
+  { schemaId: 1, uid: 1, loc: [11, 11], vel: [11, 11], acc: [10, 10], rot: 10 }, // loc and vel changed
+  { schemaId: 1, uid: 2, loc: [20, 20], vel: [20, 20], acc: [20, 20], rot: 21 }, // rot changed
+  { schemaId: 1, uid: 3, loc: [30, 30], vel: [30, 30], acc: [30, 30], rot: 30 }  // no change
 ]
 
-const set1 = [
-  { type: 'boid', uid: 1, loc: [10, 10], vel: [10, 10], acc: [10, 10], rot: 10 }
-]
-
-const set2 = [
-  { type: 'boid', uid: 1, loc: [10, 10], vel: [10, 10], acc: [10, 10], rot: 20 }
-]
-
-const schema = new Schema('boid', [
+const schema = new Schema(1, 'boid', [
   new Component('loc', Types.Array(Types.Float32, 2)),
   new Component('vel', Types.Array(Types.Float32, 2)),
   new Component('acc', Types.Array(Types.Float32, 2)),
   new Component('rot', Types.Float32),
 ])
 
-describe('DataPack:registry', () => {
+describe('DataPack:schemas', () => {
   const datapack = new DataPack()
 
   test('addSchema', () => {
     datapack.addSchema(schema)
-    expect(datapack.registry.size).toBe(1)
+    expect(datapack.schemas.size).toBe(1)
   })
 
   test('addSchema again should throw error', () => {
@@ -51,7 +43,7 @@ describe('DataPack:registry', () => {
 
   test('removeSchema', () => {
     datapack.removeSchema('boid')
-    expect(datapack.registry.size).toBe(0)
+    expect(datapack.schemas.size).toBe(0)
   })
 })
 

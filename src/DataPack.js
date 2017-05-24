@@ -6,12 +6,13 @@ import Component from './Component'
 import { equals, clone } from 'ramda'
 
 type Entity = {
-  type: string,
+  schemaId: number,
   uid: number
 }
 
 export default class DataPack {
-  registry: Map<string, Schema> = new Map()
+  schemas: Map<string, Schema> = new Map()
+  schemasById: Map<number, Schema> = new Map()
   cache: Map<number, Map<number, Entity>> = new Map()
 
   constructor(schemas: Array<Schema> = [], options: Object = {}) {
@@ -19,24 +20,30 @@ export default class DataPack {
   }
 
   addSchema(schema: Schema) {
-    if (this.registry.has(schema.name)) {
-      throw new Error(`DataPack:addSchema - schema already registered as ${schema.name}`)
+    if (this.schemas.has(schema.name)) {
+      throw new Error(`DataPack:addSchema - schema with the name ${schema.name} already registered.`)
+    } else if (this.schemasById.has(schema.id)) {
+      throw new Error(`DataPack:addSchema - schema with the id ${schema.id} already registered.`)
     } else {
-      this.registry.set(schema.name, schema)
+      this.schemas.set(schema.name, schema)
+      this.schemasById.set(schema.id, schema)
     }
   }
 
-  removeSchema(key: string | number) {
+  removeSchema(key: string | number): Schema {
     const schema = this.getSchema(key)
-    this.registry.delete(schema.name)
+    this.schemas.delete(schema.name)
+    this.schemasById.delete(schema.id)
+
+    return schema
   }
 
   getSchema(key: string | number): Schema {
     let schema
     if (typeof key === 'string') {
-      schema = this.registry.get(key)
+      schema = this.schemas.get(key)
     } else if (typeof key === 'number') {
-      schema = Array.from(this.registry.values()).find(schema => schema.id === key)
+      schema = this.schemasById.get(key)
     }
 
     if (!schema) {
@@ -47,7 +54,7 @@ export default class DataPack {
   }
 
   getDiffComponents(item: Entity, cachedItem: Entity): Array<Component> {
-    const schema = this.getSchema(item.type)
+    const schema = this.getSchema(item.schemaId)
     const components = Array.from(schema.components.values()).filter(component => {
       return !equals(item[component.name], cachedItem[component.name])
     })
@@ -70,7 +77,7 @@ export default class DataPack {
     if (!cache) { throw new Error('DataPack:createPacket - cache could not be created') }
 
     items.some((item) => {
-      const schema = this.getSchema(item.type)
+      const schema = this.getSchema(item.schemaId)
       const cachedItem = cache.get(item.uid)
 
       let components
@@ -115,8 +122,8 @@ export default class DataPack {
 
     let offset = 0
     while (offset < buffer.byteLength) {
-      const type = dataView.getUint16(offset)
-      const schema = this.getSchema(type)
+      const schemaId = dataView.getUint16(offset)
+      const schema = this.getSchema(schemaId)
       const byteLength = schema.deserialize(dataView, offset, (result) => {
         results.push(result)
       })

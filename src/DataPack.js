@@ -97,7 +97,9 @@ export default class DataPack {
         includedItemCount++
 
         // Save this included item in the cache
-        cache.set(item.uid, clone(item))
+        if (schema.options.diff) {
+          cache.set(item.uid, clone(item))
+        }
 
         selected.push({ props: item, schema, components })
       }
@@ -105,7 +107,7 @@ export default class DataPack {
 
     const buffer = new ArrayBuffer(totalByteLength)
     const dataView = new DataView(buffer, 0, buffer.byteLength)
-    const byteView = new Uint8Array(buffer, 0, buffer.byteLength)
+
     let offset = 0
     selected.forEach(data => {
       const byteLength = data.schema.serialize(dataView, offset, data.components, data.props)

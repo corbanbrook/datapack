@@ -14,6 +14,10 @@ const updatedItems = [
   { schemaId: 1, uid: 3, loc: [30, 30], vel: [30, 30], acc: [30, 30], rot: 30 }  // no change
 ]
 
+const testset = [
+  { schemaId: 1, uid: 1, loc: [0, 0], vel: [0, 0], acc: [0, 0], rot: 0 }
+]
+
 const schema = new Schema(1, 'boid', [
   new Component('loc', Types.Array(Types.Float32, 2)),
   new Component('vel', Types.Array(Types.Float32, 2)),
@@ -131,5 +135,43 @@ describe('DataPack:readPacket', () => {
     expect(buffer.byteLength).toBe(96)
     const items = datapack.deserialize(buffer)
     expect(items.length).toBe(3)
+  })
+})
+
+describe('DataPack:readPacket', () => {
+  const datapack = new DataPack([schema])
+  const maxPacketSize = 1024
+
+  test('create a packet and read it back', () => {
+    const buffer = datapack.serialize(2, testset, maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(1)
+  })
+
+
+  test('create another packet and read it back', () => {
+    testset[0].loc[0] = 1
+
+    const buffer = datapack.serialize(2, testset, maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(1)
+  })
+
+
+  test('create a packet and read it back again', () => {
+    testset[0].loc[0] = 2
+
+    const buffer = datapack.serialize(2, testset, maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(1)
+  })
+
+
+  test('create a packet and read it back again', () => {
+    testset[0].loc[0] = 3
+
+    const buffer = datapack.serialize(2, testset, maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(1)
   })
 })

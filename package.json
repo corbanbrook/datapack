@@ -1,6 +1,6 @@
 {
   "name": "datapack",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Efficent packing of binary data",
   "main": "lib/index.js",
   "repository": "https://github.com/corbanbrook/datapack.git",

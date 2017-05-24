@@ -84,6 +84,18 @@ describe('DataPack:readPacket', () => {
     const items = datapack.deserialize(buffer)
     expect(items.length).toBe(2)
   })
+
+  test('create a packet and read it back again', () => {
+    const buffer = datapack.serialize(clientId, updatedItems, maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(0)
+  })
+
+  test('create a packet and read it back again', () => {
+    const buffer = datapack.serialize(clientId, initialItems, maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(2)
+  })
 })
 
 describe('DataPack:createPacket', () => {

@@ -97,7 +97,7 @@ export default class DataPack {
         includedItemCount++
 
         // Save this included item in the cache
-        cache.set(item.uid, item)
+        cache.set(item.uid, clone(item))
 
         selected.push({ props: item, schema, components })
       }

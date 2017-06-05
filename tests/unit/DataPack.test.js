@@ -18,6 +18,36 @@ const testset = [
   { schemaId: 1, uid: 1, loc: [0, 0], vel: [0, 0], acc: [0, 0], rot: 0 }
 ]
 
+let _idx = 1
+const createItem = () => {
+  return {
+    schemaId: 1,
+    uid: _idx++,
+    loc: [Math.random() * 1000, Math.random() * 1000],
+    vel: [Math.random() * 1000, Math.random() * 1000],
+    acc: [Math.random() * 1000, Math.random() * 1000],
+    rot: Math.random() * 360
+  }
+}
+
+const NUM_ITEMS = 50000
+const itemSet = new Array(NUM_ITEMS)
+for(let i = 0; i < NUM_ITEMS; i++) {
+  itemSet[i] = createItem()
+}
+
+const mangle = (items) => {
+  items.forEach(item => {
+    item.loc[0] = Math.random() * 1000
+    item.loc[1] = Math.random() * 1000
+    item.vel[0] = Math.random() * 1000
+    item.vel[1] = Math.random() * 1000
+    item.acc[0] = Math.random() * 1000
+    item.acc[1] = Math.random() * 1000
+    item.rot = Math.random() * 1000
+  })
+}
+
 const schema = new Schema(1, 'boid', [
   new Component('loc', Types.Array(Types.Float32, 2)),
   new Component('vel', Types.Array(Types.Float32, 2)),
@@ -173,5 +203,47 @@ describe('DataPack:readPacket', () => {
     const buffer = datapack.serialize(2, testset, maxPacketSize)
     const items = datapack.deserialize(buffer)
     expect(items.length).toBe(1)
+  })
+})
+
+describe('DataPack:lots of items', () => {
+  const datapack = new DataPack([schemaNoDiff])
+  const maxPacketSize = NUM_ITEMS * schemaNoDiff.byteLength
+
+  test('create a packet and read it back', () => {
+    const buffer = datapack.serialize(3, itemSet, maxPacketSize)
+    expect(buffer.byteLength).toBe(maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(NUM_ITEMS)
+  })
+
+  test('create a packet and read it back again', () => {
+    const buffer = datapack.serialize(3, itemSet, maxPacketSize)
+    expect(buffer.byteLength).toBe(maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(NUM_ITEMS)
+  })
+})
+
+describe('DataPack:lots of items', () => {
+  const datapack = new DataPack([schema])
+  const maxPacketSize = NUM_ITEMS * schema.byteLength
+
+  test('create a packet and read it back', () => {
+    const buffer = datapack.serialize(4, itemSet, maxPacketSize)
+    expect(buffer.byteLength).toBe(maxPacketSize)
+    expect(datapack.serializeDuration).toBeLessThan(500)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(NUM_ITEMS)
+  })
+
+  test('create a packet and read it back again', () => {
+    mangle(itemSet)
+    const buffer = datapack.serialize(4, itemSet, maxPacketSize)
+    expect(buffer.byteLength).toBe(maxPacketSize)
+    expect(datapack.serializeDuration).toBeLessThan(700)
+    console.log(datapack.serializeDuration)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(NUM_ITEMS)
   })
 })

@@ -3,8 +3,6 @@
 import Schema from './Schema'
 import Component from './Component'
 
-import { equals, clone } from 'ramda'
-
 type Entity = {
   schemaId: number,
   uid: number
@@ -14,6 +12,11 @@ export default class DataPack {
   schemas: Map<string, Schema> = new Map()
   schemasById: Map<number, Schema> = new Map()
   cache: Map<number, Map<number, Entity>> = new Map()
+
+  serializeDuration: number
+  serializeIncludedItemCount: number
+  serializeByteLength: number
+  deserializeDuration: number
 
   constructor(schemas: Array<Schema> = [], options: Object = {}) {
     schemas.forEach(this.addSchema.bind(this))
@@ -56,18 +59,21 @@ export default class DataPack {
   getDiffComponents(item: Entity, cachedItem: Entity): Array<Component> {
     const schema = this.getSchema(item.schemaId)
     const components = Array.from(schema.components.values()).filter(component => {
-      return !equals(item[component.name], cachedItem[component.name])
+      return !component.isEqual(item, cachedItem)
     })
 
     return components
   }
 
   serialize(clientId: number, items: Array<Entity>, maxPacketSize: number = Infinity): ArrayBuffer {
+    const startedAt = Date.now()
+
     let idx = 0
     let totalByteLength = 0
     let includedItemCount = 0
 
-    const selected = []
+    const selected = new Array(items.length)
+    let selectedOffset = 0
 
     if (!this.cache.has(clientId)) {
       this.cache.set(clientId, new Map())
@@ -98,26 +104,32 @@ export default class DataPack {
 
         // Save this included item in the cache
         if (schema.options.diff) {
-          cache.set(item.uid, clone(item))
+          cache.set(item.uid, schema.clone(item))
         }
 
-        selected.push({ props: item, schema, components })
+        selected[selectedOffset++] = { props: item, schema, components }
       }
     })
 
     const buffer = new ArrayBuffer(totalByteLength)
     const dataView = new DataView(buffer, 0, buffer.byteLength)
 
+    let data
     let offset = 0
-    selected.forEach(data => {
-      const byteLength = data.schema.serialize(dataView, offset, data.components, data.props)
-      offset += byteLength
-    })
+    for (let idx = 0; idx < selectedOffset; idx++) {
+      data = selected[idx]
+      offset += data.schema.serialize(dataView, offset, data.components, data.props)
+    }
+
+    this.serializeDuration = Date.now() - startedAt
+    this.serializeIncludedItemCount = includedItemCount
+    this.serializeByteLength = totalByteLength
 
     return buffer
   }
 
   deserialize(buffer: ArrayBuffer): Array<Entity> {
+    const startedAt = Date.now()
     const dataView = new DataView(buffer, 0, buffer.byteLength)
     const results = []
 
@@ -130,6 +142,8 @@ export default class DataPack {
       })
       offset += byteLength
     }
+
+    this.deserializeDuration = Date.now() - startedAt
 
     return results
   }

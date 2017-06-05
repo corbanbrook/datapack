@@ -1,7 +1,7 @@
 //@flow
 
 import Component from './Component'
-import Types from './Types'
+import Types, { DataTypes } from './Types'
 import { hasFlag } from './helpers'
 
 export default class Schema {
@@ -10,7 +10,7 @@ export default class Schema {
   components: Map<string, Component> = new Map()
   byteLength: number = 0
   headerByteLength: number = 0
-
+  options: Object = {}
   header: Map<string, Component> = new Map()
 
   constructor(id: number, name: string, components: Array<Component> = [], options: Object = {}) {
@@ -68,7 +68,8 @@ export default class Schema {
 
     const headerProps = {
       schemaId: this.id,
-      uid: props.uid
+      uid: props.uid,
+      bitmask: undefined
     }
 
     if (this.options.diff) {
@@ -106,5 +107,24 @@ export default class Schema {
     callback(result)
 
     return byteLength
+  }
+
+  clone(item: Object): Object {
+    const result = {}
+
+    this.components.forEach(component => {
+      const { name, def: { type, length } } = component
+      const value = item[name]
+      if (type === DataTypes.Array) {
+        result[name] = []
+        for (let idx = 0; idx < length; idx++) {
+          result[name][idx] = value[idx]
+        }
+      } else {
+        result[name] = value
+      }
+    })
+
+    return result
   }
 }

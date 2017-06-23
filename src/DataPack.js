@@ -17,12 +17,14 @@ export default class DataPack {
     serializeDuration: number,
     serializeNumItems: number,
     serializeByteLength: number,
-    deserializeDuration: number
+    deserializeDuration: number,
+    deserializeNumItems: number
   } = {
     serializeDuration: 0,
     serializeNumItems: 0,
     serializeByteLength: 0,
-    deserializeDuration: 0
+    deserializeDuration: 0,
+    deserializeNumItems: 0
   }
 
   constructor(schemas: Array<Schema> = [], options: Object = {}) {
@@ -89,10 +91,9 @@ export default class DataPack {
 
     if (!cache) { throw new Error('DataPack:createPacket - cache could not be created') }
 
-    items.some((item) => {
-      if (totalByteLength > maxPacketSize) { return true } // Break
-
-      const schema = this.getSchema(item.schemaId)
+    for (let idx = 0, len = items.length; idx < len; idx++) {
+      let item = items[idx]
+      let schema = this.getSchema(item.schemaId)
 
       let components, cachedItem
       if (schema.options.diff && (cachedItem = cache.get(item.uid))) {
@@ -103,11 +104,11 @@ export default class DataPack {
         components = Array.from(schema.components.values())
       }
 
-      if (components.length === 0) { return }
+      if (components.length === 0) { continue }
 
-      const byteLength = schema.getByteLength(components)
+      let byteLength = schema.getByteLength(components)
 
-      if (byteLength && totalByteLength + byteLength <= maxPacketSize) {
+      if (totalByteLength + byteLength <= maxPacketSize) {
         totalByteLength += byteLength
         includedItemCount++
 
@@ -117,16 +118,18 @@ export default class DataPack {
         }
 
         selected[selectedOffset++] = { props: item, schema, components }
+      } else {
+        break
       }
-    })
+    }
 
     const buffer = new ArrayBuffer(totalByteLength)
     const dataView = new DataView(buffer, 0, buffer.byteLength)
 
-    let data
     let offset = 0
+
     for (let idx = 0; idx < selectedOffset; idx++) {
-      data = selected[idx]
+      let data = selected[idx]
       offset += data.schema.serialize(dataView, offset, data.components, data.props)
     }
 
@@ -143,6 +146,7 @@ export default class DataPack {
     const results = []
 
     let offset = 0
+    let numItems = 0
     while (offset < buffer.byteLength) {
       const schemaId = dataView.getUint16(offset)
       const schema = this.getSchema(schemaId)
@@ -150,9 +154,11 @@ export default class DataPack {
         results.push(result)
       })
       offset += byteLength
+      numItems++
     }
 
     this.metrics.deserializeDuration = Date.now() - startedAt
+    this.metrics.deserializeNumItems = numItems
 
     return results
   }

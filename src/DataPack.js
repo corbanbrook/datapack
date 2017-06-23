@@ -83,6 +83,8 @@ export default class DataPack {
     if (!cache) { throw new Error('DataPack:createPacket - cache could not be created') }
 
     items.some((item) => {
+      if (totalByteLength > maxPacketSize) { return true } // Break
+
       const schema = this.getSchema(item.schemaId)
 
       let components, cachedItem

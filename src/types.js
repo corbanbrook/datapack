@@ -32,9 +32,9 @@ const Types: { [key: DataTypeKeys]: TypeDefinition | Function } = {
   [DataTypes.Float32]:  { type: DataTypes.Float32,  byteLength: 4 },
   [DataTypes.Float64]:  { type: DataTypes.Float64,  byteLength: 4 },
 
-  [DataTypes.Array]: (def: Object, length: number): TypeDefinition => {
+  [DataTypes.Array]: (def: TypeDefinition, length: number): TypeDefinition => {
     const byteLength = def.byteLength * length
-    const read = (dataView: DataView, offset: number, littleEndian: boolean = false): Array<*> => {
+    const read = (dataView: DataView, offset: number, littleEndian: boolean = false): Array<number> => {
       const result = []
       for (let i = 0; i < length; i++) {
         const value = def.read(dataView, offset + i * def.byteLength, littleEndian)
@@ -42,7 +42,7 @@ const Types: { [key: DataTypeKeys]: TypeDefinition | Function } = {
       }
       return result
     }
-    const write = (dataView: DataView, offset: number, value: any, littleEndian: boolean = false) => {
+    const write = (dataView: DataView, offset: number, value: Array<number> = [], littleEndian: boolean = false): void => {
       for (let i = 0; i < length; i++) {
         def.write(dataView, offset + i * def.byteLength, value[i], littleEndian)
       }
@@ -52,11 +52,11 @@ const Types: { [key: DataTypeKeys]: TypeDefinition | Function } = {
 }
 
 const createReader = (fn: Function): Function =>
-  (dataView: any, byteOffset: number, littleEndian: boolean = false) =>
+  (dataView: DataView, byteOffset: number, littleEndian: boolean = false): number =>
     fn.call(dataView, byteOffset, littleEndian)
 
 const createWriter = (fn: Function): Function =>
-  (dataView: any, byteOffset: number, value: any, littleEndian: boolean = false) =>
+  (dataView: DataView, byteOffset: number, value: number, littleEndian: boolean = false): void =>
     fn.call(dataView, byteOffset, value, littleEndian)
 
 // Cache read and write methods for each type

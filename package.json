@@ -7,7 +7,7 @@
   "author": "Corban Brook <corbanbrook@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "test": "jest --verbose",
+    "test": "jest --verbose --coverage",
     "flow": "flow",
     "build": "babel src/ -d lib/"
   },

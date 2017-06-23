@@ -1,8 +1,9 @@
 //@flow
 
-type TypeDefinition = {
+export type TypeDefinition = {
   type: string,
   byteLength: number,
+  length: number,
   read: Function,
   write: Function
 }
@@ -23,14 +24,14 @@ export const DataTypes: { [key: string]: string } = {
 type DataTypeKeys = $Keys<typeof DataTypes>
 
 const Types: { [key: DataTypeKeys]: TypeDefinition | Function } = {
-  [DataTypes.Int8]:     { type: DataTypes.Int8,     byteLength: 1 },
-  [DataTypes.Uint8]:    { type: DataTypes.Uint8,    byteLength: 1 },
-  [DataTypes.Int16]:    { type: DataTypes.Int16,    byteLength: 2 },
-  [DataTypes.Uint16]:   { type: DataTypes.Uint16,   byteLength: 2 },
-  [DataTypes.Int32]:    { type: DataTypes.Int32,    byteLength: 4 },
-  [DataTypes.Uint32]:   { type: DataTypes.Uint32,   byteLength: 4 },
-  [DataTypes.Float32]:  { type: DataTypes.Float32,  byteLength: 4 },
-  [DataTypes.Float64]:  { type: DataTypes.Float64,  byteLength: 4 },
+  [DataTypes.Int8]:     { type: DataTypes.Int8,     byteLength: 1, length: 1 },
+  [DataTypes.Uint8]:    { type: DataTypes.Uint8,    byteLength: 1, length: 1 },
+  [DataTypes.Int16]:    { type: DataTypes.Int16,    byteLength: 2, length: 1 },
+  [DataTypes.Uint16]:   { type: DataTypes.Uint16,   byteLength: 2, length: 1 },
+  [DataTypes.Int32]:    { type: DataTypes.Int32,    byteLength: 4, length: 1 },
+  [DataTypes.Uint32]:   { type: DataTypes.Uint32,   byteLength: 4, length: 1 },
+  [DataTypes.Float32]:  { type: DataTypes.Float32,  byteLength: 4, length: 1 },
+  [DataTypes.Float64]:  { type: DataTypes.Float64,  byteLength: 4, length: 1 },
 
   [DataTypes.Array]: (def: TypeDefinition, length: number): TypeDefinition => {
     const byteLength = def.byteLength * length

@@ -113,11 +113,11 @@ export default class Schema {
     const result = {}
 
     this.components.forEach(component => {
-      const { name, def: { type, length } } = component
+      const { name, def } = component
       const value = item[name]
-      if (type === DataTypes.Array) {
+      if (def.type === DataTypes.Array) {
         result[name] = []
-        for (let idx = 0; idx < length; idx++) {
+        for (let idx = 0, len = def.length; idx < len; idx++) {
           result[name][idx] = value[idx]
         }
       } else {

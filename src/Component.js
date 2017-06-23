@@ -1,14 +1,15 @@
 //@flow
 
 import { DataTypes } from './Types'
+import type { TypeDefinition } from './Types'
 
 export default class Component {
   name: string
-  def: Object
+  def: TypeDefinition
   flag: number = 0
-  byteLength: number
+  byteLength: number = 0
 
-  constructor(name: string, def: Object) {
+  constructor(name: string, def: TypeDefinition) {
     this.name = name
     this.def = def
     this.byteLength = def.byteLength
@@ -18,7 +19,7 @@ export default class Component {
     return this.def.read(dataView, offset, littleEndian)
   }
 
-  write(dataView: DataView, offset: number, value: any, littleEndian: boolean = false) {
+  write(dataView: DataView, offset: number, value: number, littleEndian: boolean = false) {
     this.def.write(dataView, offset, value, littleEndian)
   }
 

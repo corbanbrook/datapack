@@ -12,11 +12,18 @@ export default class DataPack {
   schemas: Map<string, Schema> = new Map()
   schemasById: Map<number, Schema> = new Map()
   cache: Map<number, Map<number, Entity>> = new Map()
-
-  serializeDuration: number
-  serializeIncludedItemCount: number
-  serializeByteLength: number
-  deserializeDuration: number
+  
+  metrics: {
+    serializeDuration: number,
+    serializeNumItems: number,
+    serializeByteLength: number,
+    deserializeDuration: number
+  } = {
+    serializeDuration: 0,
+    serializeNumItems: 0,
+    serializeByteLength: 0,
+    deserializeDuration: 0
+  }
 
   constructor(schemas: Array<Schema> = [], options: Object = {}) {
     schemas.forEach(this.addSchema.bind(this))
@@ -123,9 +130,9 @@ export default class DataPack {
       offset += data.schema.serialize(dataView, offset, data.components, data.props)
     }
 
-    this.serializeDuration = Date.now() - startedAt
-    this.serializeIncludedItemCount = includedItemCount
-    this.serializeByteLength = totalByteLength
+    this.metrics.serializeDuration = Date.now() - startedAt
+    this.metrics.serializeNumItems = includedItemCount
+    this.metrics.serializeByteLength = totalByteLength
 
     return buffer
   }
@@ -145,7 +152,7 @@ export default class DataPack {
       offset += byteLength
     }
 
-    this.deserializeDuration = Date.now() - startedAt
+    this.metrics.deserializeDuration = Date.now() - startedAt
 
     return results
   }

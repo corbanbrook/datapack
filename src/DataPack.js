@@ -146,7 +146,7 @@ export default class DataPack {
     while (offset < buffer.byteLength) {
       const schemaId = dataView.getUint16(offset)
       const schema = this.getSchema(schemaId)
-      const byteLength = schema.deserialize(dataView, offset, (result) => {
+      const byteLength = schema.deserialize(dataView, offset, (result: Entity) => {
         results.push(result)
       })
       offset += byteLength

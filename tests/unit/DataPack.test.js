@@ -178,6 +178,11 @@ describe('DataPack:readPacket', () => {
     expect(items.length).toBe(1)
   })
 
+  test('create another packet with same data should not serialize', () => {
+    const buffer = datapack.serialize(2, testset, maxPacketSize)
+    const items = datapack.deserialize(buffer)
+    expect(items.length).toBe(0)
+  })
 
   test('create another packet and read it back', () => {
     testset[0].loc[0] = 1

@@ -62,6 +62,34 @@ const schemaNoDiff = new Schema(1, 'boid', [
   new Component('rot', Types.Float32),
 ], { diff: false })
 
+const bullet1 = {
+  schemaId: 2,
+  uid: 1,
+  playerUid: 1,
+  loc: [0, 0],
+  vel: [0, -1000],
+  acc: [0, 0],
+  rot: 0
+}
+
+const bullet2 = {
+  schemaId: 2,
+  uid: 1,
+  playerUid: 1,
+  loc: [0, -1000],
+  vel: [0, -1000],
+  acc: [0, 0],
+  rot: 0
+}
+
+const bulletSchema = new Schema(2, 'bullet', [
+  new Component('uid', Types.Uint16),
+  new Component('playerUid', Types.Uint16),
+  new Component('loc', Types.Array(Types.Int16, 2)),
+  new Component('vel', Types.Array(Types.Int16, 2)),
+  new Component('rot', Types.Int16)
+], { diff: true })
+
 describe('DataPack:schemas', () => {
   const datapack = new DataPack()
 
@@ -85,6 +113,22 @@ describe('DataPack:schemas', () => {
   test('removeSchema', () => {
     datapack.removeSchema('boid')
     expect(datapack.schemas.size).toBe(0)
+  })
+})
+
+describe('Bullet', () => {
+  const datapack = new DataPack([bulletSchema])
+
+  test('serialize 1', () => {
+    const buffer = datapack.serialize(2, [bullet1])
+    const items = datapack.deserialize(buffer)
+    console.log(items)
+  })
+
+  test('serialize 2', () => {
+    const buffer = datapack.serialize(2, [bullet2])
+    const items = datapack.deserialize(buffer)
+    console.log(items)
   })
 })
 

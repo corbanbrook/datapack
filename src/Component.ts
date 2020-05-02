@@ -1,7 +1,8 @@
 //@flow
 
-import { DataTypes } from './Types'
-import type { TypeDefinition } from './Types'
+import { DataType } from './Type'
+import type { TypeDefinition } from './Type'
+import { Entity } from './DataPack'
 
 export default class Component {
   name: string
@@ -19,15 +20,21 @@ export default class Component {
     return this.def.read(dataView, offset, littleEndian)
   }
 
-  write(dataView: DataView, offset: number, value: number, littleEndian: boolean = false) {
+  write(
+    dataView: DataView,
+    offset: number,
+    value: number,
+    littleEndian: boolean = false
+  ) {
     this.def.write(dataView, offset, value, littleEndian)
   }
 
-  isEqual(a: Object, b: Object): boolean {
-    const aValue = a[this.name], bValue = b[this.name]
+  isEqual(a: Entity, b: Entity): boolean {
+    const aValue = a[this.name],
+      bValue = b[this.name]
 
-    if (this.def.type === DataTypes.Array) {
-      return !aValue.some((value, idx) => value !== bValue[idx])
+    if (this.def.type === DataType.Array) {
+      return !(aValue as number[]).some((value, idx) => value !== bValue[idx])
     } else {
       return aValue === bValue
     }

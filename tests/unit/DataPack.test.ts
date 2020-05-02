@@ -1,4 +1,4 @@
-import { DataPack, Schema, Component, Types } from '../../src'
+import { DataPack, Schema, Component, Type } from '../../src'
 
 const clientId = 1
 
@@ -11,7 +11,7 @@ const initialItems = [
 const updatedItems = [
   { schemaId: 1, uid: 1, loc: [11, 11], vel: [11, 11], acc: [10, 10], rot: 10 }, // loc and vel changed
   { schemaId: 1, uid: 2, loc: [20, 20], vel: [20, 20], acc: [20, 20], rot: 21 }, // rot changed
-  { schemaId: 1, uid: 3, loc: [30, 30], vel: [30, 30], acc: [30, 30], rot: 30 }  // no change
+  { schemaId: 1, uid: 3, loc: [30, 30], vel: [30, 30], acc: [30, 30], rot: 30 } // no change
 ]
 
 const testset = [
@@ -19,7 +19,17 @@ const testset = [
 ]
 
 let _idx = 1
-const createItem = () => {
+
+interface Item {
+  schemaId: number
+  uid: number
+  loc: [number, number]
+  vel: [number, number]
+  acc: [number, number]
+  rot: number
+}
+
+const createItem = (): Item => {
   return {
     schemaId: 1,
     uid: _idx++,
@@ -31,13 +41,13 @@ const createItem = () => {
 }
 
 const NUM_ITEMS = 50000
-const itemSet = new Array(NUM_ITEMS)
-for(let i = 0; i < NUM_ITEMS; i++) {
+const itemSet: Item[] = new Array(NUM_ITEMS)
+for (let i = 0; i < NUM_ITEMS; i++) {
   itemSet[i] = createItem()
 }
 
-const mangle = (items) => {
-  items.forEach(item => {
+const mangle = (items: Item[]) => {
+  items.forEach((item) => {
     item.loc[0] = Math.random() * 1000
     item.loc[1] = Math.random() * 1000
     item.vel[0] = Math.random() * 1000
@@ -48,19 +58,29 @@ const mangle = (items) => {
   })
 }
 
-const schema = new Schema(1, 'boid', [
-  new Component('loc', Types.Array(Types.Float32, 2)),
-  new Component('vel', Types.Array(Types.Float32, 2)),
-  new Component('acc', Types.Array(Types.Float32, 2)),
-  new Component('rot', Types.Float32),
-], { diff: true })
+const schema = new Schema(
+  1,
+  'boid',
+  [
+    new Component('loc', Type.Array(Type.Float32, 2)),
+    new Component('vel', Type.Array(Type.Float32, 2)),
+    new Component('acc', Type.Array(Type.Float32, 2)),
+    new Component('rot', Type.Float32)
+  ],
+  { diff: true }
+)
 
-const schemaNoDiff = new Schema(1, 'boid', [
-  new Component('loc', Types.Array(Types.Float32, 2)),
-  new Component('vel', Types.Array(Types.Float32, 2)),
-  new Component('acc', Types.Array(Types.Float32, 2)),
-  new Component('rot', Types.Float32),
-], { diff: false })
+const schemaNoDiff = new Schema(
+  1,
+  'boid',
+  [
+    new Component('loc', Type.Array(Type.Float32, 2)),
+    new Component('vel', Type.Array(Type.Float32, 2)),
+    new Component('acc', Type.Array(Type.Float32, 2)),
+    new Component('rot', Type.Float32)
+  ],
+  { diff: false }
+)
 
 const bullet1 = {
   schemaId: 2,
@@ -82,13 +102,18 @@ const bullet2 = {
   rot: 0
 }
 
-const bulletSchema = new Schema(2, 'bullet', [
-  new Component('uid', Types.Uint16),
-  new Component('playerUid', Types.Uint16),
-  new Component('loc', Types.Array(Types.Int16, 2)),
-  new Component('vel', Types.Array(Types.Int16, 2)),
-  new Component('rot', Types.Int16)
-], { diff: true })
+const bulletSchema = new Schema(
+  2,
+  'bullet',
+  [
+    new Component('uid', Type.Uint16),
+    new Component('playerUid', Type.Uint16),
+    new Component('loc', Type.Array(Type.Int16, 2)),
+    new Component('vel', Type.Array(Type.Int16, 2)),
+    new Component('rot', Type.Int16)
+  ],
+  { diff: true }
+)
 
 describe('DataPack:schemas', () => {
   const datapack = new DataPack()
@@ -236,7 +261,6 @@ describe('DataPack:readPacket', () => {
     expect(items.length).toBe(1)
   })
 
-
   test('create a packet and read it back again', () => {
     testset[0].loc[0] = 2
 
@@ -244,7 +268,6 @@ describe('DataPack:readPacket', () => {
     const items = datapack.deserialize(buffer)
     expect(items.length).toBe(1)
   })
-
 
   test('create a packet and read it back again', () => {
     testset[0].loc[0] = 3
@@ -292,7 +315,10 @@ describe('DataPack:lots of items', () => {
     expect(buffer.byteLength).toBe(maxPacketSize)
     expect(datapack.metrics.serializeDuration).toBeLessThan(700)
     const items = datapack.deserialize(buffer)
-    console.log(datapack.metrics.serializeDuration, datapack.metrics.deserializeDuration)
+    console.log(
+      datapack.metrics.serializeDuration,
+      datapack.metrics.deserializeDuration
+    )
     expect(items.length).toBe(NUM_ITEMS)
   })
 })

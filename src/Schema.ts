@@ -1,31 +1,42 @@
-//@flow
-
 import Component from './Component'
-import Types, { DataTypes } from './Types'
+import Type, { DataType } from './Type'
 import { hasFlag } from './helpers'
+
+interface SchemaOptions {
+  diff: boolean
+}
 
 export default class Schema {
   id: number
   name: string
-  components: Map<string, Component> = new Map()
   byteLength: number = 0
   headerByteLength: number = 0
-  options: Object = {}
   header: Map<string, Component> = new Map()
+  components: Map<string, Component> = new Map()
+  options: SchemaOptions = {
+    diff: false
+  }
 
-  constructor(id: number, name: string, components: Array<Component> = [], options: Object = {}) {
+  constructor(
+    id: number,
+    name: string,
+    components: Array<Component> = [],
+    options: Partial<SchemaOptions> = {}
+  ) {
     this.id = id
     this.name = name
-    this.options = options
+    Object.assign(this.options, options)
 
-    this.header.set('schemaId', new Component('schemaId', Types.Uint16))
-    this.header.set('uid', new Component('uid', Types.Uint16))
+    this.header.set('schemaId', new Component('schemaId', Type.Uint16))
+    this.header.set('uid', new Component('uid', Type.Uint16))
 
     if (this.options.diff) {
-      this.header.set('bitmask', new Component('bitmask', Types.Uint16))
+      this.header.set('bitmask', new Component('bitmask', Type.Uint16))
     }
 
-    this.header.forEach(component => this.headerByteLength += component.byteLength)
+    this.header.forEach(
+      (component) => (this.headerByteLength += component.byteLength)
+    )
 
     this.byteLength = this.headerByteLength
 
@@ -34,6 +45,14 @@ export default class Schema {
       this.byteLength += component.byteLength
       this.components.set(component.name, component)
     }, 0)
+  }
+
+  get(name: string) {
+    if (this.components.has(name)) {
+      return this.components.get(name)!
+    }
+
+    throw new Error('Could not get component.')
   }
 
   getByteLength(components?: Array<Component>): number {
@@ -48,7 +67,7 @@ export default class Schema {
   }
 
   getComponentsFromBitmask(bitmask: number): Array<Component> {
-    return Array.from(this.components.values()).filter(component =>
+    return Array.from(this.components.values()).filter((component) =>
       hasFlag(bitmask, component.flag)
     )
   }
@@ -56,20 +75,25 @@ export default class Schema {
   getComponentsBitmask(components: Array<Component>): number {
     let bitmask = 0
 
-    components.forEach(component => {
+    components.forEach((component) => {
       bitmask = bitmask | component.flag
     })
 
     return bitmask
   }
 
-  serialize(dataView: DataView, offset: number, components: Array<Component>, props: Object): number {
+  serialize(
+    dataView: DataView,
+    offset: number,
+    components: Array<Component>,
+    props: { uid: number } & any
+  ): number {
     let byteLength = 0
 
-    const headerProps = {
+    const headerProps: any = {
       schemaId: this.id,
       uid: props.uid,
-      bitmask: undefined
+      bitmask: 0
     }
 
     if (this.options.diff) {
@@ -77,11 +101,15 @@ export default class Schema {
     }
 
     this.header.forEach((component, idx) => {
-      component.write(dataView, offset + byteLength, headerProps[component.name])
+      component.write(
+        dataView,
+        offset + byteLength,
+        headerProps[component.name]
+      )
       byteLength += component.byteLength
     })
 
-    components.forEach(component => {
+    components.forEach((component) => {
       component.write(dataView, offset + byteLength, props[component.name])
       byteLength += component.byteLength
     })
@@ -90,16 +118,18 @@ export default class Schema {
   }
 
   deserialize(dataView: DataView, offset: number, callback: Function): number {
-    const result = {}
+    const result = {} as any
     let byteLength = 0
 
-    this.header.forEach(component => {
+    this.header.forEach((component) => {
       result[component.name] = component.read(dataView, offset + byteLength)
       byteLength += component.byteLength
     })
 
-    const components = this.options.diff ? this.getComponentsFromBitmask(result.bitmask) : this.components
-    components.forEach(component => {
+    const components = this.options.diff
+      ? this.getComponentsFromBitmask(result.bitmask)
+      : this.components
+    components.forEach((component: Component) => {
       result[component.name] = component.read(dataView, offset + byteLength)
       byteLength += component.byteLength
     })
@@ -109,13 +139,13 @@ export default class Schema {
     return byteLength
   }
 
-  clone(item: Object): Object {
-    const result = {}
+  clone(item: any) {
+    const result = {} as any
 
-    this.components.forEach(component => {
+    this.components.forEach((component) => {
       const { name, def } = component
       const value = item[name]
-      if (def.type === DataTypes.Array) {
+      if (def.type === DataType.Array) {
         result[name] = []
         for (let idx = 0, len = def.length; idx < len; idx++) {
           result[name][idx] = value[idx]

@@ -1,23 +1,21 @@
-//@flow
-
 import Schema from './Schema'
 import Component from './Component'
 
-type Entity = {
-  schemaId: number,
+export type Entity = {
+  schemaId: number
   uid: number
-}
+} & any
 
 export default class DataPack {
   schemas: Map<string, Schema> = new Map()
   schemasById: Map<number, Schema> = new Map()
   cache: Map<number, Map<number, Entity>> = new Map()
-  
+
   metrics: {
-    serializeDuration: number,
-    serializeNumItems: number,
-    serializeByteLength: number,
-    deserializeDuration: number,
+    serializeDuration: number
+    serializeNumItems: number
+    serializeByteLength: number
+    deserializeDuration: number
     deserializeNumItems: number
   } = {
     serializeDuration: 0,
@@ -33,9 +31,13 @@ export default class DataPack {
 
   addSchema(schema: Schema) {
     if (this.schemas.has(schema.name)) {
-      throw new Error(`DataPack:addSchema - schema with the name ${schema.name} already registered.`)
+      throw new Error(
+        `DataPack:addSchema - schema with the name ${schema.name} already registered.`
+      )
     } else if (this.schemasById.has(schema.id)) {
-      throw new Error(`DataPack:addSchema - schema with the id ${schema.id} already registered.`)
+      throw new Error(
+        `DataPack:addSchema - schema with the id ${schema.id} already registered.`
+      )
     } else {
       this.schemas.set(schema.name, schema)
       this.schemasById.set(schema.id, schema)
@@ -67,14 +69,20 @@ export default class DataPack {
 
   getDiffComponents(item: Entity, cachedItem: Entity): Array<Component> {
     const schema = this.getSchema(item.schemaId)
-    const components = Array.from(schema.components.values()).filter(component => {
-      return !component.isEqual(item, cachedItem)
-    })
+    const components = Array.from(schema.components.values()).filter(
+      (component) => {
+        return !component.isEqual(item, cachedItem)
+      }
+    )
 
     return components
   }
 
-  serialize(clientId: number, items: Array<Entity>, maxPacketSize: number = Infinity): ArrayBuffer {
+  serialize(
+    clientId: number,
+    items: Entity[],
+    maxPacketSize: number = Infinity
+  ): ArrayBuffer {
     const startedAt = Date.now()
 
     let idx = 0
@@ -89,7 +97,9 @@ export default class DataPack {
     }
     const cache = this.cache.get(clientId)
 
-    if (!cache) { throw new Error('DataPack:createPacket - cache could not be created') }
+    if (!cache) {
+      throw new Error('DataPack:createPacket - cache could not be created')
+    }
 
     for (let idx = 0, len = items.length; idx < len; idx++) {
       let item = items[idx]
@@ -104,7 +114,9 @@ export default class DataPack {
         components = Array.from(schema.components.values())
       }
 
-      if (components.length === 0) { continue }
+      if (components.length === 0) {
+        continue
+      }
 
       let byteLength = schema.getByteLength(components)
 
@@ -130,7 +142,12 @@ export default class DataPack {
 
     for (let idx = 0; idx < selectedOffset; idx++) {
       let data = selected[idx]
-      offset += data.schema.serialize(dataView, offset, data.components, data.props)
+      offset += data.schema.serialize(
+        dataView,
+        offset,
+        data.components,
+        data.props
+      )
     }
 
     this.metrics.serializeDuration = Date.now() - startedAt
@@ -140,19 +157,23 @@ export default class DataPack {
     return buffer
   }
 
-  deserialize(buffer: ArrayBuffer): Array<Entity> {
+  deserialize(buffer: ArrayBuffer): Entity[] {
     const startedAt = Date.now()
     const dataView = new DataView(buffer, 0, buffer.byteLength)
-    const results = []
+    const results: Entity[] = []
 
     let offset = 0
     let numItems = 0
     while (offset < buffer.byteLength) {
       const schemaId = dataView.getUint16(offset)
       const schema = this.getSchema(schemaId)
-      const byteLength = schema.deserialize(dataView, offset, (result: Entity) => {
-        results.push(result)
-      })
+      const byteLength = schema.deserialize(
+        dataView,
+        offset,
+        (result: Entity) => {
+          results.push(result)
+        }
+      )
       offset += byteLength
       numItems++
     }

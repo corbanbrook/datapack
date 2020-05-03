@@ -17,15 +17,15 @@ Schemas allow us to specify the structure of the data for a specific
 type. This might be an entity type in an entity-component-system. These schemas need be shared between your server and client or each peer in a peer to peer setup so that the serialized binary can be deserialized back into a JSON object.
 
 ```
-  import { Schema, Component, Types } from 'datapack'
+  import { Schema, Component, Type } from 'datapack'
 
   // Define schema for each entity type
   const playerSchema = new Schema('player', [
-    new Component('loc', Types.Array(Types.Float32)),
-    new Component('vel', Types.Array(Types.Float32)),
-    new Component('acc', Types.Array(Types.Float32)),
-    new Component('rot', Types.Float32),
-    new Component('health', Types.Uint8)
+    new Component('loc', Type.Array(Type.Float32)),
+    new Component('vel', Type.Array(Type.Float32)),
+    new Component('acc', Type.Array(Type.Float32)),
+    new Component('rot', Type.Float32),
+    new Component('health', Type.Uint8)
   ])
 ```
 
